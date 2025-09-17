@@ -9,9 +9,13 @@ contract Credentia is ERC721 {
     Counters.Counter private _tokenIds;
 
     struct Metadata {
-        string name;
+        string titleName;
+        string studentName;
+        string startDate;
+        string endDate;
+        string institution;
         string description;
-        string image; // URL o incluso base64 si quieres inline
+        string image;
         uint256 grade;
     }
 
@@ -26,7 +30,11 @@ contract Credentia is ERC721 {
 
     function awardItem(
         address recipient,
-        string memory name,
+        string memory titleName,
+        string memory studentName,
+        string memory startDate,
+        string memory endDate,
+        string memory institution,
         string memory description,
         string memory image,
         uint256 grade
@@ -37,7 +45,16 @@ contract Credentia is ERC721 {
         _mint(recipient, newItemId);
 
         // Guardamos los datos dentro del contrato
-        _tokenMetadata[newItemId] = Metadata(name, description, image, grade);
+        _tokenMetadata[newItemId] = Metadata(
+            titleName,
+            studentName,
+            startDate,
+            endDate,
+            institution,
+            description,
+            image,
+            grade
+        );
 
         return newItemId;
     }
