@@ -1,28 +1,54 @@
-//SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract Credentia is ERC721URIStorage {
+contract Credentia is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
-    mapping(string => uint8) hashes;
 
-    constructor() ERC721("Bill Token", "BTK") {}
+    struct Metadata {
+        string name;
+        string description;
+        string image; // URL o incluso base64 si quieres inline
+        uint256 grade;
+    }
+
+    mapping(uint256 => Metadata) private _tokenMetadata;
+    mapping(string => string) allowedWallets;
+
+    constructor() ERC721("Academic Title", "TIT") {
+        allowedWallets[
+            "0xe4f1638f1E34dF36D0B3523b4402A89F1478f0B1"
+        ] = "Universidad de Leon";
+    }
 
     function awardItem(
         address recipient,
-        string memory hash,
-        string memory metadata
+        string memory name,
+        string memory description,
+        string memory image,
+        uint256 grade
     ) public returns (uint256) {
-        require(hashes[hash] != 1);
-        hashes[hash] = 1;
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
+
         _mint(recipient, newItemId);
-        _setTokenURI(newItemId, metadata);
+
+        // Guardamos los datos dentro del contrato
+        _tokenMetadata[newItemId] = Metadata(name, description, image, grade);
 
         return newItemId;
+    }
+
+    function getMetadata(
+        uint256 tokenId
+    ) public view returns (Metadata memory) {
+        require(
+            tokenId > 0 && tokenId <= _tokenIds.current(),
+            "Token does not exist"
+        );
+        return _tokenMetadata[tokenId];
     }
 }
