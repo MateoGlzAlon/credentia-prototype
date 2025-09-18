@@ -1,0 +1,28 @@
+{
+    "name": "Titulo universitario",
+    "description": "Título oficial de la Universidad de León en Ingeniería Informática.",
+    "external_url": "https://universidaddeleon.es",
+    "image": "https://www.glzalomateo.dev/data/credentia/uleLogo.png",
+    "attributes": [
+        {
+            "trait_type": "Institución",
+            "value": "Universidad de León"
+        },
+        {
+            "trait_type": "Carrera",
+            "value": "Ingeniería Informática"
+        },
+        {
+            "trait_type": "Inicio",
+            "value": "Septiembre 2021"
+        },
+        {
+            "trait_type": "Fin",
+            "value": "Julio 2025"
+        },
+        {
+            "trait_type": "Nombre Estudiante",
+            "value": "Mateo González Alonso"
+        }
+    ]
+}
