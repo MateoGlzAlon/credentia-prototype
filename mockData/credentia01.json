@@ -1,7 +1,7 @@
 {
     "name": "Titulo universitario",
-    "description": "Título oficial de la Universidad de León en Ingeniería Informática.",
-    "external_url": "https://universidaddeleon.es",
+    "description": "Título oficial expedido por la Universidad de León en Ingeniería Informática, que acredita la formación académica y profesional en el ámbito de las ciencias de la computación, el desarrollo de software, los sistemas informáticos, la inteligencia artificial y las tecnologías de la información, conforme a los estándares del Espacio Europeo de Educación Superior (EEES).",
+    "external_url": "https://unileon.es",
     "image": "https://www.glzalomateo.dev/data/credentia/uleLogo.png",
     "attributes": [
         {
