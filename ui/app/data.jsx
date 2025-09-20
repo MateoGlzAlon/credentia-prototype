@@ -1,5 +1,5 @@
 export const DATA = {
-    factoryAddress: "0x413a7F57B7D4096247C167AddC1d686B2142D90B",
+    factoryAddress: "0xE56C1aa5Ee381a4a332895EF06AA4F4B4Ff754a2",
 
     factoryABI: `[
 	{
