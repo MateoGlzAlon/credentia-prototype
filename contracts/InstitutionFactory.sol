@@ -43,4 +43,3 @@ contract InstitutionFactory {
         return allInstitutions;
     }
 }
-
