@@ -130,6 +130,9 @@ export default function InstitutionDetailPage() {
       const tx = await instContract.awardItem(awardForm.recipient, awardForm.metadataURI)
       await tx.wait()
 
+      console.log("Tx enviada:", tx.hash)
+      console.log("Tx:", tx)
+
       setShowAwardForm(false)
       setAwardForm({ recipient: "", metadataURI: "" })
       setLoading(true)

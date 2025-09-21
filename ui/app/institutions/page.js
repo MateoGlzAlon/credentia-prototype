@@ -172,7 +172,7 @@ export default function InstitutionsPage() {
                     Dirección:{" "}
                     <span
                       className="text-primary cursor-pointer"
-                      onClick={() => window.open(`https://sepolia.etherscan.io/address/${inst.address}`, "_blank")}
+                      onClick={() => window.open(`https://eth-sepolia.blockscout.com/address/${inst.address}`, "_blank")}
                     >
                       {inst.address.slice(0, 6)}...{inst.address.slice(-4)}
                     </span>

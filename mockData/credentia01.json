@@ -5,23 +5,23 @@
     "image": "https://www.glzalomateo.dev/data/credentia/uleLogo.png",
     "attributes": [
         {
-            "trait_type": "Institución",
+            "trait_type": "Institution",
             "value": "Universidad de León"
         },
         {
-            "trait_type": "Carrera",
+            "trait_type": "Title",
             "value": "Ingeniería Informática"
         },
         {
-            "trait_type": "Inicio",
+            "trait_type": "StartDate",
             "value": "Septiembre 2021"
         },
         {
-            "trait_type": "Fin",
+            "trait_type": "EndDate",
             "value": "Julio 2025"
         },
         {
-            "trait_type": "Nombre Estudiante",
+            "trait_type": "Student Name",
             "value": "Mateo González Alonso"
         }
     ]
