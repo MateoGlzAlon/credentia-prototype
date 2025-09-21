@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { ethers } from "ethers"
-import { DATA } from "../../data" // tu ABI y datos de contratos
+import { DATA } from "../../data"
 
 export default function InstitutionDetailPage() {
   const params = useParams()
@@ -50,10 +50,10 @@ export default function InstitutionDetailPage() {
       const name = await instContract.name()
       const symbol = await instContract.symbol()
 
-      // Determinar total de NFTs emitidos
+      // Total de diplomas emitidos
       let total = 0
       try {
-        total = Number(await instContract._tokenIds()) // si haces público el contador
+        total = Number(await instContract._tokenIds())
       } catch {
         total = 0
         let index = 1
@@ -130,9 +130,6 @@ export default function InstitutionDetailPage() {
       const tx = await instContract.awardItem(awardForm.recipient, awardForm.metadataURI)
       await tx.wait()
 
-      console.log("Tx enviada:", tx.hash)
-      console.log("Tx:", tx)
-
       setShowAwardForm(false)
       setAwardForm({ recipient: "", metadataURI: "" })
       setLoading(true)
@@ -158,10 +155,12 @@ export default function InstitutionDetailPage() {
       <div className="min-h-screen bg-background">
         <nav className="border-b border-border bg-card/50 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-6 py-4">
-            <Link href="/" className="text-2xl font-bold text-foreground">
-              Credentia
-            </Link>
-          </div>
+            <div className="flex items-center">
+              <img src="/credentiaLogo.svg" alt="Credentia Logo" className="w-10 h-10" />
+              <Link href="/" className="text-2xl font-extrabold tracking-tight">
+                Credentia
+              </Link>
+            </div>          </div>
         </nav>
         <div className="max-w-7xl mx-auto px-6 py-12">
           <p className="text-muted-foreground">Cargando diplomas...</p>
@@ -174,18 +173,26 @@ export default function InstitutionDetailPage() {
     <div className="min-h-screen bg-background">
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-foreground">Credentia</Link>
-          {account ? (
+          <div className="flex items-center">
+            <img src="/credentiaLogo.svg" alt="Credentia Logo" className="w-10 h-10" />
+            <Link href="/" className="text-2xl font-extrabold tracking-tight">
+              Credentia
+            </Link>
+          </div>          {account ? (
             <div className="flex items-center space-x-3">
               <span className="text-sm">{account.slice(0, 6)}...{account.slice(-4)}</span>
-              <button onClick={switchAccount}
-                className="px-4 py-2 bg-secondary rounded-lg hover:bg-secondary/80 text-sm">
+              <button
+                onClick={switchAccount}
+                className="px-4 py-2 bg-secondary rounded-lg hover:bg-secondary/80 text-sm"
+              >
                 Cambiar Wallet
               </button>
             </div>
           ) : (
-            <button onClick={connectWallet}
-              className="px-6 py-2 bg-primary rounded-lg text-primary-foreground hover:bg-primary/90">
+            <button
+              onClick={connectWallet}
+              className="px-6 py-2 bg-primary rounded-lg text-primary-foreground hover:bg-primary/90"
+            >
               Conectar Wallet
             </button>
           )}
@@ -201,63 +208,73 @@ export default function InstitutionDetailPage() {
             </p>
           </div>
           {isAuthorized && (
-            <button onClick={() => setShowAwardForm(true)}
-              className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90">
+            <button
+              onClick={() => setShowAwardForm(true)}
+              className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90"
+            >
               Emitir Diploma
             </button>
           )}
         </div>
 
-        {/* Lista de Diplomas */}
-        <div>
-          <h3 className="text-2xl font-semibold text-foreground mb-6">Diplomas Emitidos</h3>
-          {diplomas.length === 0 ? (
-            <p className="text-muted-foreground">Esta institución aún no ha emitido diplomas.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {diplomas.map((d) => (
-                <div key={d.tokenId}
-                  className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
-                  {/* Imagen del NFT */}
-                  {d.metadata.image && (
-                    <img
-                      src={d.metadata.image}
-                      alt={`NFT ${d.tokenId}`}
-                      className="w-full h-40 object-contain mb-4 rounded"
-                    />
-                  )}
+        <h3 className="text-2xl font-semibold text-foreground mb-6">Diplomas Emitidos</h3>
+        {diplomas.length === 0 ? (
+          <p className="text-muted-foreground">Esta institución aún no ha emitido diplomas.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {diplomas.map((d) => (
+              <div
+                key={d.tokenId}
+                className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow flex flex-col"
+              >
+                {d.metadata.image && (
+                  <img
+                    src={d.metadata.image}
+                    alt={`NFT ${d.tokenId}`}
+                    className="w-full h-40 object-contain mb-4 rounded"
+                  />
+                )}
+                <div className="flex-grow">
                   <div className="flex justify-between items-start">
                     <h4 className="font-semibold">{d.metadata.name}</h4>
                     <span className="text-xs bg-accent/10 px-2 py-1 rounded">#{d.tokenId}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">{d.metadata.description.length < 100 ? d.metadata.description : d.metadata.description.slice(0, 100) + "..."}</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {d.metadata.description.length < 100
+                      ? d.metadata.description
+                      : d.metadata.description.slice(0, 100) + "..."}
+                  </p>
                   {d.metadata.studentName && (
-                    <p className="mt-2 text-sm">Estudiante: {d.metadata.studentName}</p>
+                    <p className="mt-2 text-sm"><strong>Estudiante:</strong> {d.metadata.studentName}</p>
                   )}
                   {d.metadata.programme && (
-                    <p className="mt-1 text-sm">Programa: {d.metadata.programme}</p>
+                    <p className="mt-1 text-sm"><strong>Programa:</strong> {d.metadata.programme}</p>
                   )}
                   {(d.metadata.startDate || d.metadata.endDate) && (
                     <p className="mt-1 text-sm">
-                      Periodo: {d.metadata.startDate} - {d.metadata.endDate}
+                      <strong>Periodo:</strong> {d.metadata.startDate} - {d.metadata.endDate}
                     </p>
                   )}
                   {d.metadata.institution && (
-                    <p className="mt-1 text-sm">Institución: {d.metadata.institution}</p>
+                    <p className="mt-1 text-sm"><strong>Institución:</strong> {d.metadata.institution}</p>
                   )}
-                  <p className="text-xs font-mono break-all mt-2">Propietario: {d.owner}</p>
-                  <a href={`https://eth-sepolia.blockscout.com/token/${institution.address}/instance/${d.tokenId}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="text-accent hover:underline mt-3 block text-sm">
-                    Ver en Blockscout →
-                  </a>
+                  <p className="text-xs font-mono break-all mt-2 text-muted-foreground">
+                    Propietario: {d.owner}
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <a
+                  href={`https://eth-sepolia.blockscout.com/token/${institution.address}/instance/${d.tokenId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 px-4 py-2 bg-primary text-primary-foreground text-center rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  Ver en Blockscout →
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* Modal Emitir Diploma */}
         {showAwardForm && (
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
@@ -280,12 +297,17 @@ export default function InstitutionDetailPage() {
                   required
                 />
                 <div className="flex space-x-3">
-                  <button type="submit"
-                    className="flex-1 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90">
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90"
+                  >
                     Emitir
                   </button>
-                  <button type="button" onClick={() => setShowAwardForm(false)}
-                    className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80">
+                  <button
+                    type="button"
+                    onClick={() => setShowAwardForm(false)}
+                    className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80"
+                  >
                     Cancelar
                   </button>
                 </div>

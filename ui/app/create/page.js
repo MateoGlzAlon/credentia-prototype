@@ -118,8 +118,12 @@ export default function CreateInstitutionPage() {
         {/* Navbar */}
         <nav className="border-b border-border bg-card/50 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-foreground">Credentia</Link>
-          </div>
+            <div className="flex items-center">
+              <img src="/credentiaLogo.svg" alt="Credentia Logo" className="w-10 h-10" />
+              <Link href="/" className="text-2xl font-extrabold tracking-tight">
+                Credentia
+              </Link>
+            </div>          </div>
         </nav>
 
         {/* Mensaje de éxito */}
@@ -160,8 +164,12 @@ export default function CreateInstitutionPage() {
       {/* Navbar */}
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-foreground">Credentia</Link>
-          {account ? (
+          <div className="flex items-center">
+            <img src="/credentiaLogo.svg" alt="Credentia Logo" className="w-10 h-10" />
+            <Link href="/" className="text-2xl font-extrabold tracking-tight">
+              Credentia
+            </Link>
+          </div>          {account ? (
             <div className="flex items-center space-x-3">
               <span className="text-sm">{account.slice(0, 6)}...{account.slice(-4)}</span>
               <button
