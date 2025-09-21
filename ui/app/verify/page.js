@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { ethers } from "ethers"
 
 export default function VerifyPage() {
   const [account, setAccount] = useState("")
@@ -13,9 +14,7 @@ export default function VerifyPage() {
   const connectWallet = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        })
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" })
         setAccount(accounts[0])
       } catch (error) {
         console.error("Error conectando wallet:", error)
@@ -30,9 +29,7 @@ export default function VerifyPage() {
           method: "wallet_requestPermissions",
           params: [{ eth_accounts: {} }],
         })
-        const accounts = await window.ethereum.request({
-          method: "eth_accounts",
-        })
+        const accounts = await window.ethereum.request({ method: "eth_accounts" })
         setAccount(accounts[0])
       } catch (error) {
         console.error("Error cambiando cuenta:", error)
@@ -43,36 +40,61 @@ export default function VerifyPage() {
   const verifyDiploma = async (e) => {
     e.preventDefault()
     if (!tokenId || !institutionAddress) return
-
     setLoading(true)
+    try {
+      const institutionABI = [
+        "function ownerOf(uint256 tokenId) view returns (address)",
+        "function tokenURI(uint256 tokenId) view returns (string)",
+      ]
 
-    // Aquí implementarás la verificación real del contrato
-    setTimeout(() => {
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const contract = new ethers.Contract(institutionAddress, institutionABI, provider)
+
+      const owner = await contract.ownerOf(tokenId)
+      const tokenURI = await contract.tokenURI(tokenId)
+      const metadataURL = tokenURI.startsWith("ipfs://")
+        ? `https://ipfs.io/ipfs/${tokenURI.slice(7)}`
+        : tokenURI
+
+      const res = await fetch(metadataURL)
+      const metadata = await res.json()
+
+      // Buscar atributos con los nombres correctos
+      const institutionAttr = metadata.attributes.find((a) => a.trait_type === "Institution")?.value
+      const studentName = metadata.attributes.find((a) => a.trait_type === "Student name")?.value
+      const startDate = metadata.attributes.find((a) => a.trait_type === "Start date")?.value
+      const endDate = metadata.attributes.find((a) => a.trait_type === "End date")?.value
+      const programme = metadata.attributes.find((a) => a.trait_type === "Programme")?.value
+
       setVerificationResult({
         valid: true,
-        owner: "0x742d35Cc6634C0532925a3b8D4C9db96590c6C87",
-        institutionName: "Universidad Ejemplo",
-        tokenURI: "https://ipfs.io/ipfs/QmExample...",
+        owner,
+        institutionName: institutionAttr,
+        tokenURI,
         metadata: {
-          name: "Grado en Ingeniería Informática",
-          description: "Título universitario verificado en blockchain",
-          graduationDate: "2024-06-15",
-          studentName: "Juan Pérez",
+          name: metadata.name,
+          description: metadata.description,
+          external_url: metadata.external_url,
+          image: metadata.image,
+          studentName,
+          startDate,
+          endDate,
+          programme,
         },
       })
+    } catch (err) {
+      console.error("Error verificando diploma:", err)
+      setVerificationResult({ valid: false })
+    } finally {
       setLoading(false)
-    }, 2000)
+    }
   }
 
   useEffect(() => {
     const checkConnection = async () => {
       if (typeof window.ethereum !== "undefined") {
-        const accounts = await window.ethereum.request({
-          method: "eth_accounts",
-        })
-        if (accounts.length > 0) {
-          setAccount(accounts[0])
-        }
+        const accounts = await window.ethereum.request({ method: "eth_accounts" })
+        if (accounts.length > 0) setAccount(accounts[0])
       }
     }
     checkConnection()
@@ -100,7 +122,6 @@ export default function VerifyPage() {
                 </Link>
               </div>
             </div>
-
             <div className="flex items-center space-x-4">
               {account ? (
                 <div className="flex items-center space-x-3">
@@ -127,7 +148,7 @@ export default function VerifyPage() {
         </div>
       </nav>
 
-      {/* Main Content */}
+      {/* Main */}
       <main className="max-w-4xl mx-auto px-6 py-12">
         <div className="space-y-8">
           <div className="text-center">
@@ -196,12 +217,12 @@ export default function VerifyPage() {
                   </div>
                 )}
                 <h3 className="text-xl font-semibold text-foreground">
-                  {verificationResult.valid ? "Diploma Verificado ✓" : "Diploma No Válido ✗"}
+                  {verificationResult.valid ? "Diploma Verificado" : "Diploma No Válido ✗"}
                 </h3>
               </div>
 
               {verificationResult.valid && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <span className="text-sm text-muted-foreground">Título:</span>
@@ -216,8 +237,14 @@ export default function VerifyPage() {
                       <p className="text-foreground font-medium">{verificationResult.institutionName}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-muted-foreground">Fecha de Graduación:</span>
-                      <p className="text-foreground font-medium">{verificationResult.metadata.graduationDate}</p>
+                      <span className="text-sm text-muted-foreground">Programa:</span>
+                      <p className="text-foreground font-medium">{verificationResult.metadata.programme}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-muted-foreground">Periodo:</span>
+                      <p className="text-foreground font-medium">
+                        {verificationResult.metadata.startDate} - {verificationResult.metadata.endDate}
+                      </p>
                     </div>
                   </div>
 
@@ -225,6 +252,16 @@ export default function VerifyPage() {
                     <span className="text-sm text-muted-foreground">Propietario del NFT:</span>
                     <p className="text-foreground font-mono text-sm">{verificationResult.owner}</p>
                   </div>
+
+                  {verificationResult.metadata.image && (
+                    <div className="pt-4">
+                      <img
+                        src={verificationResult.metadata.image}
+                        alt="Logo Institución"
+                        className="w-32 h-auto rounded"
+                      />
+                    </div>
+                  )}
 
                   <div className="flex space-x-4">
                     <a
@@ -236,13 +273,23 @@ export default function VerifyPage() {
                       Ver en Etherscan
                     </a>
                     <a
-                      href={`https://sepolia.blockscout.com/address/${institutionAddress}`}
+                      href={`https://eth-sepolia.blockscout.com/address/${institutionAddress}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors text-sm"
                     >
                       Ver en Blockscout
                     </a>
+                    {verificationResult.metadata.external_url && (
+                      <a
+                        href={verificationResult.metadata.external_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors text-sm"
+                      >
+                        Sitio Oficial
+                      </a>
+                    )}
                   </div>
                 </div>
               )}

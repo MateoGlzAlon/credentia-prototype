@@ -1,131 +1,154 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { ethers } from "ethers";
-import { DATA } from "../../data"; // Asegúrate de tener tu ABI y direcciones aquí
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
+import { ethers } from "ethers"
+import { DATA } from "../../data" // tu ABI y datos de contratos
 
 export default function InstitutionDetailPage() {
-  const params = useParams();
-  const [account, setAccount] = useState("");
-  const [institution, setInstitution] = useState(null);
-  const [diplomas, setDiplomas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [showAwardForm, setShowAwardForm] = useState(false);
-  const [awardForm, setAwardForm] = useState({ recipient: "", metadataURI: "" });
+  const params = useParams()
+  const [account, setAccount] = useState("")
+  const [institution, setInstitution] = useState(null)
+  const [diplomas, setDiplomas] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [isAuthorized, setIsAuthorized] = useState(false)
+  const [showAwardForm, setShowAwardForm] = useState(false)
+  const [awardForm, setAwardForm] = useState({ recipient: "", metadataURI: "" })
 
   const connectWallet = async () => {
-    if (!window.ethereum) return;
+    if (!window.ethereum) return
     try {
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      setAccount(accounts[0]);
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" })
+      setAccount(accounts[0])
     } catch (error) {
-      console.error("Error conectando wallet:", error);
+      console.error("Error conectando wallet:", error)
     }
-  };
+  }
 
   const switchAccount = async () => {
-    if (!window.ethereum) return;
+    if (!window.ethereum) return
     try {
       await window.ethereum.request({
         method: "wallet_requestPermissions",
         params: [{ eth_accounts: {} }],
-      });
-      const accounts = await window.ethereum.request({ method: "eth_accounts" });
-      setAccount(accounts[0]);
+      })
+      const accounts = await window.ethereum.request({ method: "eth_accounts" })
+      setAccount(accounts[0])
     } catch (error) {
-      console.error("Error cambiando cuenta:", error);
+      console.error("Error cambiando cuenta:", error)
     }
-  };
+  }
 
-  /** 🔹 Cargar datos y diplomas del contrato */
   const loadDiplomas = async () => {
     try {
-      if (!window.ethereum) throw new Error("Necesitas Metamask");
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const instContract = new ethers.Contract(params.address, DATA.institutionABI, signer);
+      if (!window.ethereum) throw new Error("Necesitas Metamask")
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const signer = await provider.getSigner()
+      const instContract = new ethers.Contract(params.address, DATA.institutionABI, signer)
 
-      // Datos básicos
-      const name = await instContract.name();
-      const symbol = await instContract.symbol();
+      const name = await instContract.name()
+      const symbol = await instContract.symbol()
 
-      // Total de diplomas
-      let total = 0;
+      // Determinar total de NFTs emitidos
+      let total = 0
       try {
-        total = Number(await instContract.totalMinted());
+        total = Number(await instContract._tokenIds()) // si haces público el contador
       } catch {
-        total = 0;
+        total = 0
+        let index = 1
+        while (true) {
+          try {
+            await instContract.ownerOf(index)
+            total = index
+            index++
+          } catch {
+            break
+          }
+        }
       }
 
-      const diplomasTemp = [];
+      const diplomasTemp = []
       for (let i = 1; i <= total; i++) {
         try {
-          const owner = await instContract.ownerOf(i);
-          const tokenUri = await instContract.tokenURI(i);
-          const res = await fetch(tokenUri);
-          const metadata = await res.json();
+          const owner = await instContract.ownerOf(i)
+          const tokenUri = await instContract.tokenURI(i)
+          const metadataURL = tokenUri.startsWith("ipfs://")
+            ? `https://ipfs.io/ipfs/${tokenUri.slice(7)}`
+            : tokenUri
+          const res = await fetch(metadataURL)
+          const metadata = await res.json()
+
+          const institutionAttr = metadata.attributes.find((a) => a.trait_type === "Institution")?.value
+          const studentName = metadata.attributes.find((a) => a.trait_type === "Student name")?.value
+          const startDate = metadata.attributes.find((a) => a.trait_type === "Start date")?.value
+          const endDate = metadata.attributes.find((a) => a.trait_type === "End date")?.value
+          const programme = metadata.attributes.find((a) => a.trait_type === "Programme")?.value
+
           diplomasTemp.push({
             tokenId: i,
             owner,
             metadataURI: tokenUri,
-            metadata,
-          });
+            metadata: {
+              name: metadata.name,
+              description: metadata.description,
+              image: metadata.image,
+              institution: institutionAttr,
+              studentName,
+              startDate,
+              endDate,
+              programme,
+            },
+          })
         } catch (err) {
-          console.error(`Error cargando diploma #${i}:`, err);
+          console.error(`Error cargando diploma #${i}:`, err)
         }
       }
 
-      setInstitution({
-        address: params.address,
-        name,
-        symbol,
-      });
-      setDiplomas(diplomasTemp);
-      setLoading(false);
+      setInstitution({ address: params.address, name, symbol })
+      setDiplomas(diplomasTemp)
+      setLoading(false)
 
       if (account) {
-        const role = await instContract.allowedWallets(account);
-        setIsAuthorized(role === "Rector" || role === "Secretaria");
+        const role = await instContract.allowedWallets(account)
+        setIsAuthorized(role === "Rector" || role === "Secretaria")
       }
     } catch (err) {
-      console.error("Error cargando institución:", err);
-      setLoading(false);
+      console.error("Error cargando institución:", err)
+      setLoading(false)
     }
-  };
+  }
 
   const awardDiploma = async (e) => {
-    e.preventDefault();
-    if (!awardForm.recipient || !awardForm.metadataURI) return;
+    e.preventDefault()
+    if (!awardForm.recipient || !awardForm.metadataURI) return
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const instContract = new ethers.Contract(params.address, DATA.institutionABI, signer);
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const signer = await provider.getSigner()
+      const instContract = new ethers.Contract(params.address, DATA.institutionABI, signer)
 
-      const tx = await instContract.awardItem(awardForm.recipient, awardForm.metadataURI);
-      await tx.wait();
+      const tx = await instContract.awardItem(awardForm.recipient, awardForm.metadataURI)
+      await tx.wait()
 
-      setShowAwardForm(false);
-      setAwardForm({ recipient: "", metadataURI: "" });
-      setLoading(true);
-      await loadDiplomas();
+      setShowAwardForm(false)
+      setAwardForm({ recipient: "", metadataURI: "" })
+      setLoading(true)
+      await loadDiplomas()
     } catch (err) {
-      console.error("Error emitiendo diploma:", err);
+      console.error("Error emitiendo diploma:", err)
     }
-  };
+  }
 
   useEffect(() => {
     const init = async () => {
       if (window.ethereum) {
-        const accounts = await window.ethereum.request({ method: "eth_accounts" });
-        if (accounts.length > 0) setAccount(accounts[0]);
+        const accounts = await window.ethereum.request({ method: "eth_accounts" })
+        if (accounts.length > 0) setAccount(accounts[0])
       }
-      await loadDiplomas();
-    };
-    init();
-  }, [params.address, account]);
+      await loadDiplomas()
+    }
+    init()
+  }, [params.address, account])
 
   if (loading) {
     return (
@@ -141,12 +164,11 @@ export default function InstitutionDetailPage() {
           <p className="text-muted-foreground">Cargando diplomas...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navbar */}
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold text-foreground">Credentia</Link>
@@ -168,7 +190,6 @@ export default function InstitutionDetailPage() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-6 py-12 space-y-8">
-        {/* Encabezado */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold">{institution.name}</h1>
@@ -194,19 +215,35 @@ export default function InstitutionDetailPage() {
               {diplomas.map((d) => (
                 <div key={d.tokenId}
                   className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                  {/* Imagen del NFT */}
+                  {d.metadata.image && (
+                    <img
+                      src={d.metadata.image}
+                      alt={`NFT ${d.tokenId}`}
+                      className="w-full h-40 object-contain mb-4 rounded"
+                    />
+                  )}
                   <div className="flex justify-between items-start">
                     <h4 className="font-semibold">{d.metadata.name}</h4>
                     <span className="text-xs bg-accent/10 px-2 py-1 rounded">#{d.tokenId}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">{d.metadata.description}</p>
+                  <p className="text-sm text-muted-foreground mt-2">{d.metadata.description.length < 100 ? d.metadata.description : d.metadata.description.slice(0, 100) + "..."}</p>
                   {d.metadata.studentName && (
                     <p className="mt-2 text-sm">Estudiante: {d.metadata.studentName}</p>
                   )}
-                  {d.metadata.graduationDate && (
-                    <p className="mt-1 text-sm">Graduación: {d.metadata.graduationDate}</p>
+                  {d.metadata.programme && (
+                    <p className="mt-1 text-sm">Programa: {d.metadata.programme}</p>
+                  )}
+                  {(d.metadata.startDate || d.metadata.endDate) && (
+                    <p className="mt-1 text-sm">
+                      Periodo: {d.metadata.startDate} - {d.metadata.endDate}
+                    </p>
+                  )}
+                  {d.metadata.institution && (
+                    <p className="mt-1 text-sm">Institución: {d.metadata.institution}</p>
                   )}
                   <p className="text-xs font-mono break-all mt-2">Propietario: {d.owner}</p>
-                  <a href={`https://sepolia.blockscout.com/token/${institution.address}/instance/${d.tokenId}`}
+                  <a href={`https://eth-sepolia.blockscout.com/token/${institution.address}/instance/${d.tokenId}`}
                     target="_blank" rel="noopener noreferrer"
                     className="text-accent hover:underline mt-3 block text-sm">
                     Ver en Blockscout →
@@ -255,5 +292,5 @@ export default function InstitutionDetailPage() {
         )}
       </main>
     </div>
-  );
+  )
 }
