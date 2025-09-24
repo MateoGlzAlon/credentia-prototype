@@ -203,9 +203,6 @@ export default function InstitutionsPage() {
                       {inst.address.slice(0, 6)}...{inst.address.slice(-4)}
                     </span>
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Diplomas emitidos: {inst.diplomasEmitidos}
-                  </p>
                 </div>
                 <Link
                   href={`/institutions/${inst.address}`}
