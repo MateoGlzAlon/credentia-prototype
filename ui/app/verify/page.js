@@ -232,10 +232,6 @@ export default function VerifyPage() {
                   <p className="font-medium">{verificationResult.institutionName}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Programa</p>
-                  <p className="font-medium">{verificationResult.metadata.programme}</p>
-                </div>
-                <div>
                   <p className="text-sm text-muted-foreground">Periodo</p>
                   <p className="font-medium">
                     {verificationResult.metadata.startDate} - {verificationResult.metadata.endDate}

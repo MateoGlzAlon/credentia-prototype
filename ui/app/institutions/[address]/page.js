@@ -247,9 +247,6 @@ export default function InstitutionDetailPage() {
                   {d.metadata.studentName && (
                     <p className="mt-2 text-sm"><strong>Estudiante:</strong> {d.metadata.studentName}</p>
                   )}
-                  {d.metadata.programme && (
-                    <p className="mt-1 text-sm"><strong>Programa:</strong> {d.metadata.programme}</p>
-                  )}
                   {(d.metadata.startDate || d.metadata.endDate) && (
                     <p className="mt-1 text-sm">
                       <strong>Periodo:</strong> {d.metadata.startDate} - {d.metadata.endDate}
