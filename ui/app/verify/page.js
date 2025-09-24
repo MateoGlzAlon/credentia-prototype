@@ -265,7 +265,7 @@ export default function VerifyPage() {
                     Ver en Etherscan →
                   </a>
                   <a
-                    href={`https://eth-sepolia.blockscout.com/address/${institutionAddress}`}
+                    href={`https://eth-sepolia.blockscout.com/token/${institutionAddress}/instance/${tokenId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 text-sm"
